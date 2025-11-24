@@ -1,0 +1,6 @@
+﻿src/app/api/checkout/route.ts(45,54): error TS2345: Argument of type '{ currency: string; account: { code: any; email: any; first_name: any; last_name: any; billing_info: { token_id: any; }; }; subscriptions: { plan_code: string; trial_ends_at: string; }[]; line_items: { currency: string; item_code: string; unit_amount: any; }[]; metadata: any; }' is not assignable to parameter of type 'PurchaseCreate'.
+  Types of property 'subscriptions' are incompatible.
+    Type '{ plan_code: string; trial_ends_at: string; }[]' is not assignable to type 'SubscriptionPurchase[]'.
+      Type '{ plan_code: string; trial_ends_at: string; }' has no properties in common with type 'SubscriptionPurchase'.
+src/components/CheckoutForm.tsx(31,41): error TS2554: Expected 2-3 arguments, but got 1.
+src/components/CheckoutForm.tsx(37,36): error TS2339: Property 'id' does not exist on type 'void'.
