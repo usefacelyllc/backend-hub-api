@@ -234,16 +234,7 @@ export default function CheckoutForm() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
                                     <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-indigo-400 transition-colors">
-                                        <CardNumberElement
-                                            style={{
-                                                fontSize: '16px',
-                                                fontFamily: 'system-ui, -apple-system, sans-serif',
-                                                placeholder: {
-                                                    color: '#9CA3AF',
-                                                    content: '4111 1111 1111 1111'
-                                                }
-                                            }}
-                                        />
+                                        <CardNumberElement />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">💳 Test: 4111 1111 1111 1111</p>
                                 </div>
@@ -252,34 +243,19 @@ export default function CheckoutForm() {
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
                                         <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-indigo-400 transition-colors">
-                                            <CardMonthElement
-                                                style={{
-                                                    fontSize: '16px',
-                                                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                                                }}
-                                            />
+                                            <CardMonthElement />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
                                         <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-indigo-400 transition-colors">
-                                            <CardYearElement
-                                                style={{
-                                                    fontSize: '16px',
-                                                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                                                }}
-                                            />
+                                            <CardYearElement />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
                                         <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-indigo-400 transition-colors">
-                                            <CardCvvElement
-                                                style={{
-                                                    fontSize: '16px',
-                                                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                                                }}
-                                            />
+                                            <CardCvvElement />
                                         </div>
                                     </div>
                                 </div>

@@ -26,6 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script src="https://js.recurly.com/v4/recurly.js"></script>
+        <link href="https://js.recurly.com/v4/recurly.css" rel="stylesheet" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}

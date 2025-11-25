@@ -6,7 +6,7 @@ import CheckoutForm from './CheckoutForm';
 
 export default function RecurlyWrapper() {
     return (
-        <RecurlyProvider publicKey="ewr1-qNQjgvVciHqOmIOyMPlcFK">
+        <RecurlyProvider publicKey="ewr1-51YSZZAboXiIyzSYrp9zL0">
             <Elements>
                 <CheckoutForm />
             </Elements>

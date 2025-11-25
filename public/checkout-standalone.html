@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dressfy - Checkout</title>
+    
+    <!-- Recurly.js Library -->
+    <script src="https://js.recurly.com/v4/recurly.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f5f5f7;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #000;
+            font-family: 'Georgia', serif;
+        }
+
+        .checkout-container {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .payment-option {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .payment-option.collapsed {
+            padding: 20px 24px;
+        }
+
+        .payment-header {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .radio-button {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #d1d1d6;
+            border-radius: 50%;
+            margin-right: 16px;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .radio-button.selected {
+            border-color: #000;
+            border-width: 8px;
+        }
+
+        .payment-logos {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .gpay-logo {
+            display: flex;
+            align-items: center;
+            font-size: 28px;
+            font-weight: 500;
+        }
+
+        .google-g {
+            width: 24px;
+            height: 24px;
+            margin-right: 4px;
+        }
+
+        .card-logos {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .card-logo {
+            height: 28px;
+            width: auto;
+        }
+
+        .payment-content {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .payment-option.expanded .payment-content {
+            display: block;
+        }
+
+        /* Google Pay Benefits */
+        .benefits-list {
+            margin: 24px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .benefits-list li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            font-size: 15px;
+            color: #1d1d1f;
+            line-height: 1.5;
+        }
+
+        .benefits-list li::before {
+            content: "✓";
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Card Form Fields */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #6e6e73;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: #f5f5f7;
+            border: 1px solid #d1d1d6;
+            border-radius: 10px;
+            padding: 14px 16px;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #000;
+            background: white;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            color: #1d1d1f;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .input-wrapper select {
+            appearance: none;
+            cursor: pointer;
+            padding-right: 24px;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .dropdown-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            pointer-events: none;
+        }
+
+        /* Recurly Elements Styling */
+        .recurly-element {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            font-size: 16px !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+        }
+
+        .recurly-element-card {
+            padding-right: 40px !important;
+        }
+
+        /* Submit Button */
+        .submit-button {
+            width: 100%;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        .submit-button:hover {
+            background: #1d1d1f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-button .gpay-icon {
+            display: inline-block;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* Security Footer */
+        .security-footer {
+            text-align: center;
+            font-size: 13px;
+            color: #86868b;
+            margin-top: 16px;
+            line-height: 1.4;
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Error messages */
+        .error-message {
+            background: #fff3f3;
+            border: 1px solid #ffcccc;
+            color: #d32f2f;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">Dressfy</div>
+    
+    <div class="checkout-container">
+        <form id="checkout-form">
+            <!-- Digital Wallet Option (Google Pay / Apple Pay) -->
+            <div id="wallet-option" class="payment-option hidden">
+                <div class="payment-header" onclick="selectPaymentMethod('wallet')">
+                    <div class="radio-button" id="wallet-radio"></div>
+                    <div class="payment-logos">
+                        <div class="gpay-logo" id="wallet-logo">
+                            <svg class="google-g" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span id="wallet-name">Pay</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="payment-content">
+                    <ul class="benefits-list">
+                        <li>Easy and private payments with Face/Touch ID</li>
+                        <li>Keeps your financial info safe with end-to-end encryption</li>
+                        <li id="wallet-benefit-3">Protected by Google Pay's unique Device Account Number</li>
+                    </ul>
+                    <button type="button" class="submit-button" id="wallet-button">
+                        Continue with <span class="gpay-icon" id="wallet-button-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align: middle;">
+                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                        </span><span id="wallet-button-text">Pay</span>
+                    </button>
+                    <div class="security-footer">
+                        Your payment information is secure with SSL/TLS encryption
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit Card Option -->
+            <div id="card-option" class="payment-option expanded">
+                <div class="payment-header" onclick="selectPaymentMethod('card')">
+                    <div class="radio-button selected" id="card-radio"></div>
+                    <div class="payment-logos">
+                        <div class="card-logos">
+                            <!-- Visa -->
+                            <svg class="card-logo" viewBox="0 0 48 32" fill="none">
+                                <rect width="48" height="32" rx="4" fill="white"/>
+                                <path d="M20.5 11h-3.2l-2 12h3.2l2-12zm8.4 7.7l1.7-4.7 1 4.7h-2.7zm3.6 4.3h3l-2.6-12h-2.7c-.6 0-1.1.4-1.3.9l-4.6 11.1h3.4l.7-1.9h4.1v1.9zm-8.2-3.9c0-3.2-4.4-3.4-4.4-4.8 0-.4.4-.9 1.3-.9.7 0 1.6.2 2.3.5l.4-2c-.8-.3-1.7-.5-2.8-.5-3 0-5.1 1.6-5.1 3.9 0 1.7 1.5 2.6 2.7 3.2 1.2.6 1.6 1 1.6 1.5 0 .8-.9 1.1-1.8 1.1-1.5 0-2.3-.4-3-.7l-.5 2.1c.7.3 2 .6 3.3.6 3.2.1 5.3-1.5 5.3-3.9l-.3-.1zM15.7 11l-5 12h-3.4l-2.5-9.7c-.2-.6-.3-.8-.8-1-.8-.4-2.2-.8-3.4-1l.1-.4h5.8c.7 0 1.4.5 1.5 1.4l1.4 7.4 3.4-8.7h3.4z" fill="#1434CB"/>
+                            </svg>
+                            <!-- Mastercard -->
+                            <svg class="card-logo" viewBox="0 0 48 32" fill="none">
+                                <rect width="48" height="32" rx="4" fill="white"/>
+                                <circle cx="18" cy="16" r="8" fill="#EB001B"/>
+                                <circle cx="30" cy="16" r="8" fill="#F79E1B"/>
+                                <path d="M24 9.6c-1.7 1.4-2.8 3.5-2.8 5.9s1.1 4.5 2.8 5.9c1.7-1.4 2.8-3.5 2.8-5.9s-1.1-4.5-2.8-5.9z" fill="#FF5F00"/>
+                            </svg>
+                            <!-- Maestro -->
+                            <svg class="card-logo" viewBox="0 0 48 32" fill="none">
+                                <rect width="48" height="32" rx="4" fill="#0099DF"/>
+                                <circle cx="18" cy="16" r="7" fill="#0099DF" stroke="white" stroke-width="1.5"/>
+                                <circle cx="30" cy="16" r="7" fill="#0099DF" stroke="white" stroke-width="1.5"/>
+                                <text x="24" y="20" text-anchor="middle" fill="white" font-size="8" font-weight="bold">maestro</text>
+                            </svg>
+                            <!-- Amex -->
+                            <svg class="card-logo" viewBox="0 0 48 32" fill="none">
+                                <rect width="48" height="32" rx="4" fill="#006FCF"/>
+                                <text x="24" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">AMEX</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="payment-content">
+                    <!-- Card Number -->
+                    <div class="form-group">
+                        <label class="form-label">Card number</label>
+                        <div class="input-wrapper" id="card-number-wrapper">
+                            <div id="card-number" class="recurly-element recurly-element-card"></div>
+                            <div class="input-icon" id="card-icon">
+                                <svg viewBox="0 0 32 20" fill="none">
+                                    <rect width="32" height="20" rx="2" fill="#EB001B"/>
+                                    <rect x="12" width="8" height="20" fill="#F79E1B"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expiration and CVV -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Expiration date</label>
+                            <div class="input-wrapper">
+                                <div id="card-month" class="recurly-element" style="display: inline-block; width: 35%;"></div>
+                                <span style="display: inline-block; padding: 0 4px; color: #86868b;">/</span>
+                                <div id="card-year" class="recurly-element" style="display: inline-block; width: 45%;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Security code</label>
+                            <div class="input-wrapper">
+                                <div id="card-cvv" class="recurly-element"></div>
+                                <div class="input-icon">
+                                    <svg viewBox="0 0 32 20" fill="none">
+                                        <rect width="32" height="20" rx="2" fill="#D1D1D6"/>
+                                        <rect x="2" y="3" width="28" height="4" fill="#86868B"/>
+                                        <rect x="20" y="11" width="10" height="6" rx="1" fill="white"/>
+                                        <text x="25" y="16" text-anchor="middle" fill="#1D1D1F" font-size="5" font-weight="bold">123</text>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Country -->
+                    <div class="form-group">
+                        <label class="form-label">Country</label>
+                        <div class="input-wrapper">
+                            <select id="country" data-recurly="country" required>
+                                <option value="BR">Brazil</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="CA">Canada</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="ES">Spain</option>
+                                <option value="IT">Italy</option>
+                                <option value="MX">Mexico</option>
+                                <option value="AR">Argentina</option>
+                            </select>
+                            <svg class="dropdown-arrow" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 4l4 4 4-4" stroke="#86868B" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields for Recurly -->
+                    <input type="hidden" data-recurly="first_name" value="John">
+                    <input type="hidden" data-recurly="last_name" value="Doe">
+
+                    <button type="submit" class="submit-button" id="card-button">
+                        Continue
+                    </button>
+                    <div class="security-footer">
+                        Your payment information is secure with SSL/TLS encryption
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Messages -->
+        <div id="message-container"></div>
+    </div>
+
+    <script>
+        // Initialize Recurly
+        const PUBLIC_KEY = 'ewr1-51YSZZAboXiIyzSYrp9zL0'; // Replace with your actual public key
+        const recurly = window.recurly;
+        
+        if (!recurly) {
+            console.error('Recurly.js failed to load');
+        } else {
+            recurly.configure(PUBLIC_KEY);
+        }
+
+        // State management
+        let selectedPaymentMethod = 'card';
+        let walletType = null; // 'googlepay' or 'applepay'
+        let recurlyElements = {};
+
+        // Initialize Recurly Elements
+        function initializeRecurlyElements() {
+            const elementStyle = {
+                fontSize: '16px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontColor: '#1d1d1f',
+                placeholder: {
+                    color: '#86868b'
+                }
+            };
+
+            // Card Number
+            recurlyElements.cardNumber = recurly.Elements.CardNumberElement({
+                style: elementStyle,
+                displayIcon: false
+            });
+            recurlyElements.cardNumber.attach('#card-number');
+
+            // Month
+            recurlyElements.cardMonth = recurly.Elements.CardMonthElement({
+                style: { ...elementStyle, placeholder: { content: 'MM' } }
+            });
+            recurlyElements.cardMonth.attach('#card-month');
+
+            // Year
+            recurlyElements.cardYear = recurly.Elements.CardYearElement({
+                style: { ...elementStyle, placeholder: { content: 'YY' } }
+            });
+            recurlyElements.cardYear.attach('#card-year');
+
+            // CVV
+            recurlyElements.cardCvv = recurly.Elements.CardCvvElement({
+                style: { ...elementStyle, placeholder: { content: 'CVC' } }
+            });
+            recurlyElements.cardCvv.attach('#card-cvv');
+
+            // Listen for card type changes to update icon
+            recurlyElements.cardNumber.on('change', (state) => {
+                updateCardIcon(state.brand);
+            });
+        }
+
+        // Update card brand icon
+        function updateCardIcon(brand) {
+            const iconElement = document.getElementById('card-icon');
+            const icons = {
+                visa: '<svg viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="2" fill="#1434CB"/><text x="16" y="14" text-anchor="middle" fill="white" font-size="8" font-weight="bold">VISA</text></svg>',
+                master: '<svg viewBox="0 0 32 20" fill="none"><circle cx="12" cy="10" r="6" fill="#EB001B"/><circle cx="20" cy="10" r="6" fill="#F79E1B"/></svg>',
+                american_express: '<svg viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="2" fill="#006FCF"/><text x="16" y="14" text-anchor="middle" fill="white" font-size="7" font-weight="bold">AMEX</text></svg>',
+                maestro: '<svg viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="2" fill="#0099DF"/><circle cx="12" cy="10" r="5" fill="none" stroke="white" stroke-width="1"/><circle cx="20" cy="10" r="5" fill="none" stroke="white" stroke-width="1"/></svg>',
+                default: '<svg viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="2" fill="#D1D1D6"/></svg>'
+            };
+            iconElement.innerHTML = icons[brand] || icons.default;
+        }
+
+        // Check for digital wallet availability
+        async function checkDigitalWallets() {
+            try {
+                // Check Google Pay
+                const googlePay = recurly.GooglePay({
+                    country: 'US',
+                    currency: 'USD',
+                    total: '1.00'
+                });
+
+                const googlePayReady = await new Promise((resolve) => {
+                    googlePay.ready(() => resolve(true));
+                    setTimeout(() => resolve(false), 2000);
+                });
+
+                if (googlePayReady) {
+                    setupWalletOption('googlepay', googlePay);
+                    return;
+                }
+
+                // Check Apple Pay
+                const applePay = recurly.ApplePay({
+                    country: 'US',
+                    currency: 'USD',
+                    total: '1.00',
+                    label: 'Dressfy Purchase'
+                });
+
+                const applePayReady = await new Promise((resolve) => {
+                    applePay.ready(() => resolve(true));
+                    setTimeout(() => resolve(false), 2000);
+                });
+
+                if (applePayReady) {
+                    setupWalletOption('applepay', applePay);
+                }
+            } catch (error) {
+                console.log('Digital wallets not available:', error);
+            }
+        }
+
+        // Setup wallet option UI
+        function setupWalletOption(type, walletInstance) {
+            walletType = type;
+            const walletOption = document.getElementById('wallet-option');
+            const walletName = document.getElementById('wallet-name');
+            const walletButtonText = document.getElementById('wallet-button-text');
+            const walletBenefit = document.getElementById('wallet-benefit-3');
+
+            if (type === 'googlepay') {
+                walletName.textContent = 'Pay';
+                walletButtonText.textContent = 'Pay';
+                walletBenefit.textContent = "Protected by Google Pay's unique Device Account Number";
+            } else if (type === 'applepay') {
+                walletName.textContent = 'Pay';
+                walletButtonText.textContent = 'Pay';
+                walletBenefit.textContent = "Protected by Apple Pay's secure element technology";
+                // Update logo to Apple Pay
+                document.getElementById('wallet-logo').innerHTML = `
+                    <svg class="google-g" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7.078 23.55c-.473-.316-.893-.703-1.244-1.15-.383-.463-.738-.95-1.064-1.454-.766-1.12-1.365-2.345-1.78-3.636-.5-1.502-.743-2.94-.743-4.347 0-1.57.34-2.94 1.002-4.09.49-.9 1.22-1.653 2.1-2.182.85-.53 1.84-.82 2.84-.84.35 0 .73.05 1.13.15.29.08.64.21 1.07.37.55.21.85.34.95.37.32.12.59.17.8.17.16 0 .39-.05.645-.13.145-.05.42-.14.81-.31.386-.14.692-.26.935-.35.37-.11.728-.21 1.05-.26.39-.06.777-.08 1.148-.05.71.05 1.36.2 1.94.42 1.02.41 1.843 1.05 2.457 1.96-.26.16-.5.346-.725.55-.487.43-.9.94-1.23 1.505-.43.77-.65 1.64-.644 2.52.015 1.083.29 2.035.84 2.86.387.6.904 1.114 1.534 1.536.31.21.582.355.84.45-.12.375-.252.74-.405 1.1-.347.807-.76 1.58-1.25 2.31-.432.63-.772 1.1-1.03 1.41-.402.48-.79.84-1.18 1.097-.43.285-.935.436-1.452.436-.35.015-.7-.03-1.034-.127-.29-.095-.576-.202-.856-.323-.293-.134-.596-.248-.905-.34-.38-.1-.77-.148-1.164-.147-.4 0-.79.05-1.16.145-.31.088-.61.196-.907.325-.42.175-.695.29-.855.34-.324.096-.656.154-.99.175-.52 0-1.004-.15-1.486-.45zm6.854-18.46c-.68.34-1.326.484-1.973.436-.1-.646 0-1.31.27-2.037.24-.62.56-1.18 1-1.68.46-.52 1.01-.95 1.63-1.26.66-.34 1.29-.52 1.89-.55.08.68 0 1.35-.25 2.07-.228.64-.568 1.23-1 1.76-.435.52-.975.95-1.586 1.26z"/>
+                    </svg>
+                `;
+            }
+
+            // Show wallet option and make it default
+            walletOption.classList.remove('hidden');
+            selectPaymentMethod('wallet');
+
+            // Move wallet option to the top
+            const container = walletOption.parentElement;
+            container.insertBefore(walletOption, container.firstChild);
+
+            // Attach wallet button handler
+            document.getElementById('wallet-button').addEventListener('click', (e) => {
+                e.preventDefault();
+                handleWalletPayment(walletInstance);
+            });
+        }
+
+        // Handle wallet payment
+        function handleWalletPayment(walletInstance) {
+            showMessage('Processing payment...', 'info');
+            
+            walletInstance.on('token', (token) => {
+                console.log('Wallet token received:', token);
+                showMessage('Payment successful! Token: ' + token.id, 'success');
+                // Here you would send the token to your backend
+            });
+
+            walletInstance.on('error', (error) => {
+                console.error('Wallet error:', error);
+                showMessage('Payment failed: ' + error.message, 'error');
+            });
+
+            walletInstance.begin();
+        }
+
+        // Payment method selection
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            const walletOption = document.getElementById('wallet-option');
+            const cardOption = document.getElementById('card-option');
+            const walletRadio = document.getElementById('wallet-radio');
+            const cardRadio = document.getElementById('card-radio');
+
+            if (method === 'wallet') {
+                walletOption.classList.add('expanded');
+                walletOption.classList.remove('collapsed');
+                walletRadio.classList.add('selected');
+                
+                cardOption.classList.remove('expanded');
+                cardOption.classList.add('collapsed');
+                cardRadio.classList.remove('selected');
+            } else {
+                cardOption.classList.add('expanded');
+                cardOption.classList.remove('collapsed');
+                cardRadio.classList.add('selected');
+                
+                if (!walletOption.classList.contains('hidden')) {
+                    walletOption.classList.remove('expanded');
+                    walletOption.classList.add('collapsed');
+                    walletRadio.classList.remove('selected');
+                }
+            }
+        }
+
+        // Form submission
+        document.getElementById('checkout-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (selectedPaymentMethod === 'card') {
+                handleCardPayment();
+            }
+        });
+
+        // Handle card payment
+        function handleCardPayment() {
+            const form = document.getElementById('checkout-form');
+            const button = document.getElementById('card-button');
+            
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            showMessage('Processing payment...', 'info');
+
+            recurly.token(form, (err, token) => {
+                button.disabled = false;
+                button.textContent = 'Continue';
+
+                if (err) {
+                    console.error('Tokenization error:', err);
+                    showMessage('Payment failed: ' + err.message, 'error');
+                } else {
+                    console.log('Token received:', token);
+                    showMessage('Payment successful! Token: ' + token.id, 'success');
+                    // Here you would send the token to your backend
+                }
+            });
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const container = document.getElementById('message-container');
+            const className = type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : 'info-message';
+            container.innerHTML = `<div class="${className}">${text}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeRecurlyElements();
+            checkDigitalWallets();
+        });
+    </script>
+</body>
+</html>
