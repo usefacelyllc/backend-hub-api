@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
     return [
       {
         // Isso libera o acesso para todas as rotas que começam com /api
-        //
         source: "/api/:path*",
         headers: [
           { key: "Access-Control-Allow-Credentials", value: "true" },
