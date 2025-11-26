@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             line_items: trialAmount > 0 ? [
                 {
                     currency: 'USD',
-                    item_code: 'dressfy-paid-trial',
+                    item_code: 'paid-trial',
                     unit_amount: trialAmount,
                 }
             ] : [],
